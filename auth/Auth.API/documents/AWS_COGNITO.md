@@ -6,6 +6,21 @@ Aqui está como pedimos para ele fazer cada coisa:
 
 ---
 
+## 🛠️ 0. Como Instalar (Preparar o Terreno)
+**O que é?** Antes de tudo, precisamos trazer as ferramentas do Guardião para dentro do nosso projeto. É como se estivéssemos baixando o "manual de instruções" e os acessórios que o Guardião usa para trabalhar.
+
+**Como fazemos?**
+Abra o seu terminal (aquela telinha preta de comandos) dentro da pasta do projeto e digite esses dois comandos mágicos:
+
+```bash
+dotnet add package AWSSDK.CognitoIdentityProvider
+dotnet add package Amazon.Extensions.CognitoAuthentication
+```
+
+Pronto! Agora o nosso projeto já sabe como conversar com o Guardião.
+
+---
+
 ## 🔑 1. Login (Pedir para Entrar)
 **O que é?** É quando você chega na porta do clube e diz seu nome e sua senha para o Guardião.
 **Como fazemos no código?**
@@ -125,12 +140,42 @@ var response = await _cognitoClient.ConfirmForgotPasswordAsync(confirmRequest);
 
 ---
 
-## 🎫 5. Retornar Dados de Autenticação (A Pulseirinha Mágica)
-**O que é?** Quando o Guardião deixa você entrar, ele te dá informações importantes para o aplicativo saber quem você é.
+## 🎫 5. Retornar Dados de Autenticação (A Pulseirinha Mágica / A Ficha do Clube)
+**O que é?** É quando você precisa ver a "ficha completa" do usuário no clube, para saber quem ele é, o e-mail ou o nome que está salvo lá.
 **Como fazemos no código?**
-Depois do login, o Guardião nos devolve o **AccessToken** (a pulseirinha para entrar), o **IdToken** (seu crachá com seu nome e e-mail) e o **RefreshToken** (um vale-troca para quando sua pulseirinha ficar velha e precisar de uma nova).
+Usamos o comando `AdminGetUserAsync`. É como dizer: *"Guardião, me mostra a ficha dessa pessoa aqui!"*. Ele vai olhar nos arquivos e te devolver todas as informações daquele membro.
 
----
+**Exemplo em .NET:**
+```csharp
+var getUserRequest = new AdminGetUserRequest
+{
+    UserPoolId = "Seu_Pool_Id",
+    Username = "email@exemplo.com" // O e-mail de quem você quer ver a ficha
+};
+
+var response = await _cognitoClient.AdminGetUserAsync(getUserRequest);
+
+// O que o Guardião devolve (response):
+// response.UserAttributes -> Traz uma listinha com dados como "name" (nome) e "email".
+// response.UserStatus -> Mostra se ele está "CONFIRMED" (tudo ok) ou se precisa de algo.
+// response.Enabled -> Mostra se a pessoa está permitida a entrar no clube (true).
+```
+
+**O JSON que o Guardião manda (Bruto):**
+```json
+{
+  "Enabled": true,
+  "UserAttributes": [
+    { "Name": "sub", "Value": "codigo-unico-do-usuario" },
+    { "Name": "email", "Value": "rafael@exemplo.com" },
+    { "Name": "name", "Value": "Rafael Silva" }
+  ],
+  "UserCreateDate": 1679860000,
+  "UserLastModifiedDate": 1679865000,
+  "UserStatus": "CONFIRMED",
+  "Username": "rafael@exemplo.com"
+}
+```
 
 ## 👤 6. Criar Usuários (Convidar um Amigo)
 **O que é?** É colocar o nome de um novo amigo na lista oficial do clube.
@@ -284,6 +329,62 @@ var response = await _cognitoClient.ConfirmSignUpAsync(confirmSignUpRequest);
 
 ---
 
+## ✏️ 10. Atualizar Dados (Mudar o Nome no Cadastro)
+**O que é?** É quando você quer mudar alguma informação sua no clube, como o seu nome.
+**Como fazemos no código?**
+Usamos o comando `AdminUpdateUserAttributesAsync`. A gente fala para o Guardião: *"Guardião, atualiza o nome desse e-mail para esse novo nome aqui!"*.
+
+**Exemplo em .NET:**
+```csharp
+var updateRequest = new AdminUpdateUserAttributesRequest
+{
+    UserPoolId = "Seu_Pool_Id",
+    Username = "email@exemplo.com", // O e-mail de quem vamos mudar
+    UserAttributes = new List<AttributeType>
+    {
+        new AttributeType { Name = "name", Value = "Novo Nome Legal" }
+    }
+};
+
+var response = await _cognitoClient.AdminUpdateUserAttributesAsync(updateRequest);
+
+// O que o Guardião devolve (response):
+// Se der tudo certo, ele só devolve o Status 200 (OK), avisando que mudou!
+```
+
+**O JSON que o Guardião manda (Bruto):**
+```json
+{} // Resposta vazia, só confirmando que deu certo!
+```
+
+
+---
+
+## 🗑️ 11. Excluir Usuário (Sair do Clube)
+**O que é?** É quando você não quer mais fazer parte do clube e pede para o Guardião apagar todos os seus dados.
+**Como fazemos no código?**
+Usamos o comando `AdminDeleteUserAsync`. A gente avisa: *"Guardião, pode apagar esse usuário do sistema!"*.
+
+**Exemplo em .NET:**
+```csharp
+var deleteRequest = new AdminDeleteUserRequest
+{
+    UserPoolId = "Seu_Pool_Id",
+    Username = "email@exemplo.com" // O e-mail de quem vamos excluir
+};
+
+var response = await _cognitoClient.AdminDeleteUserAsync(deleteRequest);
+
+// O que o Guardião devolve (response):
+// Devolve Status 200 (OK) se excluiu com sucesso!
+```
+
+**O JSON que o Guardião manda (Bruto):**
+```json
+{} // Resposta vazia, confirmando que apagou!
+```
+
+
 ---
 
 ## 🛠️ Seção Técnica (Para o Desenvolvedor)
@@ -300,6 +401,8 @@ Se você for o "Mestre do Código", aqui estão os nomes que o Guardião entende
 | **Renovar Token** | `AdminInitiateAuthAsync (REFRESH_TOKEN_AUTH)` |
 | **Primeiro Acesso** | `AdminRespondToAuthChallengeAsync` |
 | **Confirmar Cadastro** | `ConfirmSignUpAsync` |
+| **Atualizar Dados** | `AdminUpdateUserAttributesAsync` |
+| **Excluir Usuário** | `AdminDeleteUserAsync` |
 
 > [!TIP]
 > **Lembre-se:** O Guardião é muito rigoroso! Se você errar a senha ou o código, ele não vai deixar você passar. Segurança em primeiro lugar! 🛡️
