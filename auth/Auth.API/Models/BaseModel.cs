@@ -18,7 +18,7 @@ public class BaseModel
             ExpiresIn = response.AuthenticationResult.ExpiresIn ?? 0,
             IdToken = response.AuthenticationResult.IdToken ?? string.Empty,
             RefreshToken = response.AuthenticationResult.RefreshToken ?? string.Empty,
-            TokenType = response.AuthenticationResult.TokenType ?? string.Empty
+            TokenType = response.AuthenticationResult.TokenType ?? string.Empty,
         };
     }
 
@@ -30,7 +30,7 @@ public class BaseModel
             ExpiresIn = response.AuthenticationResult?.ExpiresIn ?? 0,
             IdToken = response.AuthenticationResult?.IdToken ?? string.Empty,
             RefreshToken = response.AuthenticationResult?.RefreshToken ?? string.Empty,
-            TokenType = response.AuthenticationResult?.TokenType ?? string.Empty
+            TokenType = response.AuthenticationResult?.TokenType ?? string.Empty,
         };
     }
 }

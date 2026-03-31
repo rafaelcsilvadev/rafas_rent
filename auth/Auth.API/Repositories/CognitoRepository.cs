@@ -4,7 +4,8 @@ using Auth.API.Models;
 
 namespace Auth.API.Repositories;
 
-public interface ICognitoRepository<T> where T : BaseModel
+public interface ICognitoRepository<T>
+    where T : BaseModel
 {
     Task<T> SignIn(string email, string password);
     Task ForgotPassword(string email);
@@ -18,7 +19,8 @@ public interface ICognitoRepository<T> where T : BaseModel
     Task DeleteUser(string email);
 }
 
-public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
+public class CognitoRepository<T> : ICognitoRepository<T>
+    where T : BaseModel
 {
     private readonly AmazonCognitoIdentityProviderClient _cognitoClient;
     private readonly string _userPoolId;
@@ -26,7 +28,10 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
     private readonly ILogger<CognitoRepository<T>> _logger;
     private readonly T _model;
 
-    public CognitoRepository(AmazonCognitoIdentityProviderClient cognitoClient, ILogger<CognitoRepository<T>> logger)
+    public CognitoRepository(
+        AmazonCognitoIdentityProviderClient cognitoClient,
+        ILogger<CognitoRepository<T>> logger
+    )
     {
         _cognitoClient = cognitoClient;
         _userPoolId = Environment.GetEnvironmentVariable("AWS_COGNITO_USER_POOL_ID") ?? "";
@@ -48,55 +53,21 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
             throw new Exception("AWS_COGNITO_USER_POOL_ID or AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var authRequest = new AdminInitiateAuthRequest
         {
-
-            var authRequest = new AdminInitiateAuthRequest
+            UserPoolId = _userPoolId,
+            ClientId = _clientId,
+            AuthFlow = AuthFlowType.ADMIN_NO_SRP_AUTH,
+            AuthParameters = new Dictionary<string, string>
             {
-                UserPoolId = _userPoolId,
-                ClientId = _clientId,
-                AuthFlow = AuthFlowType.ADMIN_NO_SRP_AUTH,
-                AuthParameters = new Dictionary<string, string>
-                {
-                    { "USERNAME", email },
-                    { "PASSWORD", password }
-                }
-            };
+                { "USERNAME", email },
+                { "PASSWORD", password },
+            },
+        };
 
-            var response = await _cognitoClient.AdminInitiateAuthAsync(authRequest);
+        var response = await _cognitoClient.AdminInitiateAuthAsync(authRequest);
 
-            return (T)(BaseModel)response;
-
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.LogError(
-                "SignIn: {Message}",
-                ex.Message
-            );
-
-            throw new UnauthorizedAccessException(ex.Message);
-
-        }
-        catch (UserNotConfirmedException ex)
-        {
-            _logger.LogError(
-                "SignIn: {Message}",
-                ex.Message
-            );
-
-            throw new UserNotConfirmedException(ex.Message);
-
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "SignIn: {Message}",
-                ex.Message
-            );
-
-            throw new Exception(ex.Message);
-        }
+        return (T)(BaseModel)response;
     }
 
     private bool CheckForgotPasswordVariables()
@@ -112,37 +83,13 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
             throw new Exception("AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var forgotPasswordRequest = new ForgotPasswordRequest
         {
-            var forgotPasswordRequest = new ForgotPasswordRequest
-            {
-                ClientId = _clientId,
-                Username = email,
-            };
+            ClientId = _clientId,
+            Username = email,
+        };
 
-            await _cognitoClient.ForgotPasswordAsync(forgotPasswordRequest);
-
-            return;
-
-        }
-        catch (UserNotFoundException ex)
-        {
-            _logger.LogError(
-                "ForgotPassword: {Message}",
-                ex.Message
-            );
-
-            throw new UserNotFoundException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "ForgotPassword: {Message}",
-                ex.Message
-            );
-
-            throw new Exception(ex.Message);
-        }
+        await _cognitoClient.ForgotPasswordAsync(forgotPasswordRequest);
     }
 
     private bool CheckConfirmForgotPasswordVariables()
@@ -158,47 +105,15 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
             throw new Exception("AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var confirmForgotPasswordRequest = new ConfirmForgotPasswordRequest
         {
-            var confirmForgotPasswordRequest = new ConfirmForgotPasswordRequest
-            {
-                ClientId = _clientId,
-                Username = email,
-                ConfirmationCode = code,
-                Password = password
-            };
+            ClientId = _clientId,
+            Username = email,
+            ConfirmationCode = code,
+            Password = password,
+        };
 
-            await _cognitoClient.ConfirmForgotPasswordAsync(confirmForgotPasswordRequest);
-
-            return;
-        }
-        catch (NotAuthorizedException ex)
-        {
-            _logger.LogError(
-                "ConfirmForgotPassword: {Message}",
-                ex.Message
-            );
-
-            throw new NotAuthorizedException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError(
-                "ConfirmForgotPassword: {Message}",
-                ex.Message
-            );
-
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "ConfirmForgotPassword: {Message}",
-                ex.Message
-            );
-
-            throw new Exception(ex.Message);
-        }
+        await _cognitoClient.ConfirmForgotPasswordAsync(confirmForgotPasswordRequest);
     }
 
     private bool CheckSignUpVariables()
@@ -214,54 +129,17 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
             throw new Exception("AWS_COGNITO_USER_POOL_ID or AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var signUpRequest = new AdminCreateUserRequest
         {
-            var signUpRequest = new AdminCreateUserRequest
+            Username = email,
+            UserPoolId = _userPoolId,
+            UserAttributes = new List<AttributeType>
             {
+                new AttributeType { Name = "email", Value = email },
+            },
+        };
 
-                Username = email,
-                UserPoolId = _userPoolId,
-                UserAttributes = new List<AttributeType>
-                {
-                    new AttributeType
-                    {
-                        Name = "email",
-                        Value = email
-                    }
-                }
-            };
-
-            await _cognitoClient.AdminCreateUserAsync(signUpRequest);
-
-            return;
-        }
-        catch (UsernameExistsException ex)
-        {
-            _logger.LogError(
-                "SignUp: {Message}",
-                ex.Message
-            );
-
-            throw new UsernameExistsException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError(
-                "SignUp: {Message}",
-                ex.Message
-            );
-
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "SignUp: {Message}",
-                ex.Message
-            );
-
-            throw new Exception(ex.Message);
-        }
+        await _cognitoClient.AdminCreateUserAsync(signUpRequest);
     }
 
     private bool CheckConfirmSignUpVariables()
@@ -277,46 +155,14 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
             throw new Exception("AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var confirmSignUpRequest = new ConfirmSignUpRequest
         {
-            var confirmSignUpRequest = new ConfirmSignUpRequest
-            {
-                ClientId = _clientId,
-                Username = email,
-                ConfirmationCode = code
-            };
+            ClientId = _clientId,
+            Username = email,
+            ConfirmationCode = code,
+        };
 
-            await _cognitoClient.ConfirmSignUpAsync(confirmSignUpRequest);
-
-            return;
-        }
-        catch (CodeMismatchException ex)
-        {
-            _logger.LogError(
-                "ConfirmSignUp: {Message}",
-                ex.Message
-            );
-
-            throw new CodeMismatchException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError(
-                "ConfirmSignUp: {Message}",
-                ex.Message
-            );
-
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "ConfirmSignUp: {Message}",
-                ex.Message
-            );
-
-            throw new Exception(ex.Message);
-        }
+        await _cognitoClient.ConfirmSignUpAsync(confirmSignUpRequest);
     }
 
     private bool CheckFirstAccessVariables()
@@ -332,53 +178,23 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
             throw new Exception("AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var firstAccessRequest = new AdminRespondToAuthChallengeRequest
         {
-            var firstAccessRequest = new AdminRespondToAuthChallengeRequest
+            ClientId = _clientId,
+            UserPoolId = _userPoolId,
+            ChallengeName = ChallengeNameType.NEW_PASSWORD_REQUIRED,
+            Session = code,
+            ChallengeResponses = new Dictionary<string, string>
             {
-                ClientId = _clientId,
-                UserPoolId = _userPoolId,
-                ChallengeName = ChallengeNameType.NEW_PASSWORD_REQUIRED,
-                Session = code,
-                ChallengeResponses = new Dictionary<string, string>
-                {
-                    { "USERNAME", email },
-                    { "NEW_PASSWORD", password },
-                    {"userAttributes.name", name}
-                }
-            };
+                { "USERNAME", email },
+                { "NEW_PASSWORD", password },
+                { "userAttributes.name", name },
+            },
+        };
 
-            var response = await _cognitoClient.AdminRespondToAuthChallengeAsync(firstAccessRequest);
+        var response = await _cognitoClient.AdminRespondToAuthChallengeAsync(firstAccessRequest);
 
-            return (T)(BaseModel)response;
-        }
-        catch (CodeMismatchException ex)
-        {
-            _logger.LogError(
-                "FirstAccess: {Message}",
-                ex.Message
-            );
-
-            throw new CodeMismatchException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError(
-                "FirstAccess: {Message}",
-                ex.Message
-            );
-
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "FirstAccess: {Message}",
-                ex.Message
-            );
-
-            throw new Exception(ex.Message);
-        }
+        return (T)(BaseModel)response;
     }
 
     private bool CheckVerifyEmailVariables()
@@ -402,12 +218,8 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
                 Username = email,
                 UserAttributes = new List<AttributeType>
                 {
-                    new AttributeType
-                    {
-                        Name = "email_verified",
-                        Value = "true"
-                    }
-                }
+                    new AttributeType { Name = "email_verified", Value = "true" },
+                },
             };
 
             await _cognitoClient.AdminUpdateUserAttributesAsync(verifyEmailRequest);
@@ -452,12 +264,8 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
                 Username = email,
                 UserAttributes = new List<AttributeType>
                 {
-                    new AttributeType
-                    {
-                        Name = "name",
-                        Value = name
-                    }
-                }
+                    new AttributeType { Name = "name", Value = name },
+                },
             };
 
             await _cognitoClient.AdminUpdateUserAttributesAsync(updateUserRequest);
@@ -466,28 +274,19 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
         }
         catch (NotAuthorizedException ex)
         {
-            _logger.LogError(
-                "UpdateUser: {Message}",
-                ex.Message
-            );
+            _logger.LogError("UpdateUser: {Message}", ex.Message);
 
             throw new NotAuthorizedException(ex.Message);
         }
         catch (InvalidParameterException ex)
         {
-            _logger.LogError(
-                "UpdateUser: {Message}",
-                ex.Message
-            );
+            _logger.LogError("UpdateUser: {Message}", ex.Message);
 
             throw new InvalidParameterException(ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                "UpdateUser: {Message}",
-                ex.Message
-            );
+            _logger.LogError("UpdateUser: {Message}", ex.Message);
 
             throw new Exception(ex.Message);
         }
@@ -511,7 +310,7 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
             var deleteUserRequest = new AdminDeleteUserRequest
             {
                 UserPoolId = _userPoolId,
-                Username = email
+                Username = email,
             };
 
             await _cognitoClient.AdminDeleteUserAsync(deleteUserRequest);
@@ -520,28 +319,19 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
         }
         catch (NotAuthorizedException ex)
         {
-            _logger.LogError(
-                "DeleteUser: {Message}",
-                ex.Message
-            );
+            _logger.LogError("DeleteUser: {Message}", ex.Message);
 
             throw new NotAuthorizedException(ex.Message);
         }
         catch (InvalidParameterException ex)
         {
-            _logger.LogError(
-                "DeleteUser: {Message}",
-                ex.Message
-            );
+            _logger.LogError("DeleteUser: {Message}", ex.Message);
 
             throw new InvalidParameterException(ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                "DeleteUser: {Message}",
-                ex.Message
-            );
+            _logger.LogError("DeleteUser: {Message}", ex.Message);
 
             throw new Exception(ex.Message);
         }
@@ -569,8 +359,8 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
                 AuthFlow = AuthFlowType.REFRESH_TOKEN_AUTH,
                 AuthParameters = new Dictionary<string, string>
                 {
-                    { "REFRESH_TOKEN", refreshToken }
-                }
+                    { "REFRESH_TOKEN", refreshToken },
+                },
             };
 
             var response = await _cognitoClient.AdminInitiateAuthAsync(refreshTokenRequest);
@@ -579,28 +369,19 @@ public class CognitoRepository<T> : ICognitoRepository<T> where T : BaseModel
         }
         catch (NotAuthorizedException ex)
         {
-            _logger.LogError(
-                "RefreshToken: {Message}",
-                ex.Message
-            );
+            _logger.LogError("RefreshToken: {Message}", ex.Message);
 
             throw new NotAuthorizedException(ex.Message);
         }
         catch (InvalidParameterException ex)
         {
-            _logger.LogError(
-                "RefreshToken: {Message}",
-                ex.Message
-            );
+            _logger.LogError("RefreshToken: {Message}", ex.Message);
 
             throw new InvalidParameterException(ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                "RefreshToken: {Message}",
-                ex.Message
-            );
+            _logger.LogError("RefreshToken: {Message}", ex.Message);
 
             throw new Exception(ex.Message);
         }
