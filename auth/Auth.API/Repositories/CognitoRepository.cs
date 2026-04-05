@@ -210,37 +210,19 @@ public class CognitoRepository<T> : ICognitoRepository<T>
             throw new Exception("AWS_COGNITO_USER_POOL_ID or AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var verifyEmailRequest = new AdminUpdateUserAttributesRequest
         {
-            var verifyEmailRequest = new AdminUpdateUserAttributesRequest
-            {
-                UserPoolId = _userPoolId,
-                Username = email,
-                UserAttributes = new List<AttributeType>
+            UserPoolId = _userPoolId,
+            Username = email,
+            UserAttributes = new List<AttributeType>
                 {
                     new AttributeType { Name = "email_verified", Value = "true" },
                 },
-            };
+        };
 
-            await _cognitoClient.AdminUpdateUserAttributesAsync(verifyEmailRequest);
+        await _cognitoClient.AdminUpdateUserAttributesAsync(verifyEmailRequest);
 
-            return;
-        }
-        catch (NotAuthorizedException ex)
-        {
-            _logger.LogError("VerifyEmail: {Message}", ex.Message);
-            throw new NotAuthorizedException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError("VerifyEmail: {Message}", ex.Message);
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("VerifyEmail: {Message}", ex.Message);
-            throw new Exception(ex.Message);
-        }
+        return;
     }
 
     private bool CheckUpdateUserVariables()
@@ -256,40 +238,19 @@ public class CognitoRepository<T> : ICognitoRepository<T>
             throw new Exception("AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+        var updateUserRequest = new AdminUpdateUserAttributesRequest
         {
-            var updateUserRequest = new AdminUpdateUserAttributesRequest
-            {
-                UserPoolId = _userPoolId,
-                Username = email,
-                UserAttributes = new List<AttributeType>
+            UserPoolId = _userPoolId,
+            Username = email,
+            UserAttributes = new List<AttributeType>
                 {
                     new AttributeType { Name = "name", Value = name },
                 },
-            };
+        };
 
-            await _cognitoClient.AdminUpdateUserAttributesAsync(updateUserRequest);
+        await _cognitoClient.AdminUpdateUserAttributesAsync(updateUserRequest);
 
-            return;
-        }
-        catch (NotAuthorizedException ex)
-        {
-            _logger.LogError("UpdateUser: {Message}", ex.Message);
-
-            throw new NotAuthorizedException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError("UpdateUser: {Message}", ex.Message);
-
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("UpdateUser: {Message}", ex.Message);
-
-            throw new Exception(ex.Message);
-        }
+        return;
     }
 
     private bool CheckDeleteUserVariables()
@@ -305,36 +266,15 @@ public class CognitoRepository<T> : ICognitoRepository<T>
             throw new Exception("AWS_COGNITO_USER_POOL_ID is not set");
         }
 
-        try
+        var deleteUserRequest = new AdminDeleteUserRequest
         {
-            var deleteUserRequest = new AdminDeleteUserRequest
-            {
-                UserPoolId = _userPoolId,
-                Username = email,
-            };
+            UserPoolId = _userPoolId,
+            Username = email,
+        };
 
-            await _cognitoClient.AdminDeleteUserAsync(deleteUserRequest);
+        await _cognitoClient.AdminDeleteUserAsync(deleteUserRequest);
 
-            return;
-        }
-        catch (NotAuthorizedException ex)
-        {
-            _logger.LogError("DeleteUser: {Message}", ex.Message);
-
-            throw new NotAuthorizedException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError("DeleteUser: {Message}", ex.Message);
-
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("DeleteUser: {Message}", ex.Message);
-
-            throw new Exception(ex.Message);
-        }
+        return;
     }
 
     private bool CheckRefreshTokenVariables()
@@ -350,40 +290,20 @@ public class CognitoRepository<T> : ICognitoRepository<T>
             throw new Exception("AWS_COGNITO_CLIENT_ID is not set");
         }
 
-        try
+
+        var refreshTokenRequest = new AdminInitiateAuthRequest
         {
-            var refreshTokenRequest = new AdminInitiateAuthRequest
-            {
-                ClientId = _clientId,
-                UserPoolId = _userPoolId,
-                AuthFlow = AuthFlowType.REFRESH_TOKEN_AUTH,
-                AuthParameters = new Dictionary<string, string>
+            ClientId = _clientId,
+            UserPoolId = _userPoolId,
+            AuthFlow = AuthFlowType.REFRESH_TOKEN_AUTH,
+            AuthParameters = new Dictionary<string, string>
                 {
                     { "REFRESH_TOKEN", refreshToken },
                 },
-            };
+        };
 
-            var response = await _cognitoClient.AdminInitiateAuthAsync(refreshTokenRequest);
+        var response = await _cognitoClient.AdminInitiateAuthAsync(refreshTokenRequest);
 
-            return (T)(BaseModel)response;
-        }
-        catch (NotAuthorizedException ex)
-        {
-            _logger.LogError("RefreshToken: {Message}", ex.Message);
-
-            throw new NotAuthorizedException(ex.Message);
-        }
-        catch (InvalidParameterException ex)
-        {
-            _logger.LogError("RefreshToken: {Message}", ex.Message);
-
-            throw new InvalidParameterException(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("RefreshToken: {Message}", ex.Message);
-
-            throw new Exception(ex.Message);
-        }
+        return (T)(BaseModel)response;
     }
 }

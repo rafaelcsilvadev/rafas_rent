@@ -9,14 +9,14 @@ namespace Auth.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class ClienteController : ControllerBase
+public class AdminController : ControllerBase
 {
-    private readonly ICognitoRepository<ClientModel> _cognitoRepository;
-    private readonly ILogger<ClienteController> _logger;
+    private readonly ICognitoRepository<AdminModel> _cognitoRepository;
+    private readonly ILogger<AdminController> _logger;
 
-    public ClienteController(
-        ICognitoRepository<ClientModel> cognitoRepository,
-        ILogger<ClienteController> logger
+    public AdminController(
+        ICognitoRepository<AdminModel> cognitoRepository,
+        ILogger<AdminController> logger
     )
     {
         _cognitoRepository = cognitoRepository;
