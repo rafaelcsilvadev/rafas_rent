@@ -3,6 +3,7 @@ using Amazon.Runtime;
 using Auth.API.Dtos;
 using Auth.API.Models;
 using Auth.API.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Auth.API.Controllers;
@@ -11,11 +12,11 @@ namespace Auth.API.Controllers;
 [Route("[controller]")]
 public class AdminController : ControllerBase
 {
-    private readonly ICognitoRepository<AdminModel> _cognitoRepository;
+    private readonly ICognitoRepository<ClientModel> _cognitoRepository;
     private readonly ILogger<AdminController> _logger;
 
     public AdminController(
-        ICognitoRepository<AdminModel> cognitoRepository,
+        ICognitoRepository<ClientModel> cognitoRepository,
         ILogger<AdminController> logger
     )
     {
@@ -24,6 +25,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [Route("sign-in")]
     public async Task<IActionResult> SignIn([FromBody] SignInDto signInDto)
     {
@@ -44,6 +46,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [Route("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
     {
@@ -64,6 +67,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [Route("confirm-forgot-password")]
     public async Task<IActionResult> ConfirmForgotPassword(
         [FromBody] ConfirmForgotPasswordDto confirmForgotPasswordDto
@@ -90,6 +94,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [Route("sign-up")]
     public async Task<IActionResult> SignUp([FromBody] SignUpDto signUpDto)
     {
@@ -110,6 +115,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [Route("confirm-sign-up")]
     public async Task<IActionResult> ConfirmSignUp([FromBody] ConfirmSignUpDto confirmSignUpDto)
     {
@@ -130,6 +136,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [Route("first-access")]
     public async Task<IActionResult> FirstAccess([FromBody] FirstAccessDto firstAccessDto)
     {
@@ -155,6 +162,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [Route("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDto verifyEmailDto)
     {
@@ -175,6 +183,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [Route("update-user")]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto updateUserDto)
     {
@@ -195,6 +204,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [Route("delete-user")]
     public async Task<IActionResult> DeleteUser([FromBody] DeleteUserDto deleteUserDto)
     {
@@ -215,6 +225,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [Route("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshTokenDto)
     {
