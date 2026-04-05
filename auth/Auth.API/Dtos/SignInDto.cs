@@ -1,7 +1,19 @@
+using FluentValidation;
+
 namespace Auth.API.Dtos;
 
-public class SignInDto
+public record SignInDto(string Email, string Password);
+
+public class SignInDtoValidator : AbstractValidator<SignInDto>
 {
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
+    public SignInDtoValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required")
+            .EmailAddress().WithMessage("Must be a valid email format");
+
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Password is required")
+            .MinimumLength(8).WithMessage("Password must be at least 8 characters");
+    }
 }

@@ -1,8 +1,23 @@
+using FluentValidation;
+
 namespace Auth.API.Dtos;
 
-public class ConfirmForgotPasswordDto
+public record ConfirmForgotPasswordDto(string Email, string Code, string Password);
+
+public class ConfirmForgotPasswordDtoValidator : AbstractValidator<ConfirmForgotPasswordDto>
 {
-    public string Email { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
+    public ConfirmForgotPasswordDtoValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required")
+            .EmailAddress().WithMessage("Must be a valid email format");
+
+        RuleFor(x => x.Code)
+            .NotEmpty().WithMessage("Code is required")
+            .MinimumLength(6).WithMessage("Code must be at least 6 characters");
+
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Password is required")
+            .MinimumLength(6).WithMessage("Password must be at least 6 characters");
+    }
 }

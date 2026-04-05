@@ -215,9 +215,9 @@ public class CognitoRepository<T> : ICognitoRepository<T>
             UserPoolId = _userPoolId,
             Username = email,
             UserAttributes = new List<AttributeType>
-                {
-                    new AttributeType { Name = "email_verified", Value = "true" },
-                },
+            {
+                new AttributeType { Name = "email_verified", Value = "true" },
+            },
         };
 
         await _cognitoClient.AdminUpdateUserAttributesAsync(verifyEmailRequest);
@@ -243,9 +243,9 @@ public class CognitoRepository<T> : ICognitoRepository<T>
             UserPoolId = _userPoolId,
             Username = email,
             UserAttributes = new List<AttributeType>
-                {
-                    new AttributeType { Name = "name", Value = name },
-                },
+            {
+                new AttributeType { Name = "name", Value = name },
+            },
         };
 
         await _cognitoClient.AdminUpdateUserAttributesAsync(updateUserRequest);
@@ -290,16 +290,12 @@ public class CognitoRepository<T> : ICognitoRepository<T>
             throw new Exception("AWS_COGNITO_CLIENT_ID is not set");
         }
 
-
         var refreshTokenRequest = new AdminInitiateAuthRequest
         {
             ClientId = _clientId,
             UserPoolId = _userPoolId,
             AuthFlow = AuthFlowType.REFRESH_TOKEN_AUTH,
-            AuthParameters = new Dictionary<string, string>
-                {
-                    { "REFRESH_TOKEN", refreshToken },
-                },
+            AuthParameters = new Dictionary<string, string> { { "REFRESH_TOKEN", refreshToken } },
         };
 
         var response = await _cognitoClient.AdminInitiateAuthAsync(refreshTokenRequest);

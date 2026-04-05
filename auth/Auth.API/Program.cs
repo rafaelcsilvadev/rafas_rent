@@ -7,18 +7,21 @@ var builder = WebApplication.CreateBuilder(args);
 var userPollId = Environment.GetEnvironmentVariable("AWS_COGNITO_USER_POOL_ID");
 
 // Authentication Middleware
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.Authority = $"https://cognito-idp.us-east-1.amazonaws.com/{userPollId}";
-        options.TokenValidationParameters = new TokenValidationParameters
+builder
+    .Services.AddAuthentication("Bearer")
+    .AddJwtBearer(
+        "Bearer",
+        options =>
         {
-            ValidateAudience = false
-        };
-    });
+            options.Authority = $"https://cognito-idp.us-east-1.amazonaws.com/{userPollId}";
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+            };
+        }
+    );
 
 builder.Services.AddAuthorization();
-    
 
 // Add services to the container.
 builder.Services.AddControllers();

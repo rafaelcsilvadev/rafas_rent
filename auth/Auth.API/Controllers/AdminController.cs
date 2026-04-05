@@ -24,6 +24,12 @@ public class AdminController : ControllerBase
         _logger = logger;
     }
 
+    private bool IsCompanyEmail(string email)
+    {
+        return email.EndsWith("@rafasrent.com");
+    }
+
+
     [HttpPost]
     [AllowAnonymous]
     [Route("sign-in")]
@@ -31,6 +37,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(signInDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             var result = await _cognitoRepository.SignIn(signInDto.Email, signInDto.Password);
             return Ok(result);
         }
@@ -52,6 +63,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(forgotPasswordDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             await _cognitoRepository.ForgotPassword(forgotPasswordDto.Email);
             return Ok();
         }
@@ -75,6 +91,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(confirmForgotPasswordDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             await _cognitoRepository.ConfirmForgotPassword(
                 confirmForgotPasswordDto.Email,
                 confirmForgotPasswordDto.Code,
@@ -100,6 +121,12 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(signUpDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
+
             await _cognitoRepository.SignUp(signUpDto.Email, signUpDto.Password);
             return Ok();
         }
@@ -121,6 +148,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(confirmSignUpDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             await _cognitoRepository.ConfirmSignUp(confirmSignUpDto.Email, confirmSignUpDto.Code);
             return Ok();
         }
@@ -142,6 +174,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(firstAccessDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             var response = await _cognitoRepository.FirstAccess(
                 firstAccessDto.Email,
                 firstAccessDto.Name,
@@ -168,6 +205,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(verifyEmailDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             await _cognitoRepository.VerifyEmail(verifyEmailDto.Email, verifyEmailDto.Code);
             return Ok();
         }
@@ -189,6 +231,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(updateUserDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             await _cognitoRepository.UpdateUser(updateUserDto.Email, updateUserDto.Name);
             return Ok();
         }
@@ -210,6 +257,11 @@ public class AdminController : ControllerBase
     {
         try
         {
+            if (!IsCompanyEmail(deleteUserDto.Email))
+            {
+                return BadRequest(new { Message = "Unauthorized: Only company emails are allowed." });
+            }
+
             await _cognitoRepository.DeleteUser(deleteUserDto.Email);
             return Ok();
         }

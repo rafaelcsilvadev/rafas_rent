@@ -1,7 +1,19 @@
+using FluentValidation;
+
 namespace Auth.API.Dtos;
 
-public class UpdateUserDto
+public record UpdateUserDto(string Email, string Name);
+
+public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
 {
-    public string Email { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
+    public UpdateUserDtoValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required")
+            .EmailAddress().WithMessage("Must be a valid email format");
+
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name is required")
+            .MinimumLength(3).WithMessage("Name must be at least 3 characters");
+    }
 }
